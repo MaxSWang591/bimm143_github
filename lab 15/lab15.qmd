@@ -23,7 +23,11 @@ The core steps to use git:
 
 > in R studio, hit the "commit" buttion in the git tab. in the comand line type `git commit - m "messege"`
 
-5. With github you can push commits into the online git repositories. 
+5. With github you can push commits into the online git repositories. In command line type `git push`. 
+
+6. Furthermore, with changes in the repo, you can pull into your personal computer via the pull buttion. In the command line type `git pull`
+
+
 
 ## Using Github API
 
