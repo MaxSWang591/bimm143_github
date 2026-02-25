@@ -1,0 +1,205 @@
+---
+title: "lab07: Machine Learning 1"
+author: "Max Wang"
+format: pdf
+toc: TRUE
+---
+
+## Background 
+Start the exploration of machine learning methods, namely **clustering** and **dimensionality reduction**.
+
+Define test data for clustering with known natural "clusters".
+
+The function `rnorm()` produces a random number based on a normal distribution with parameters for the distribution. rnorm(n, mean, sd) defines the sample size and the normal distribution mean and sd. 
+
+>Q. generate 30 random numberes centered at 3 and another centered at -3 and plot them
+
+```{r}
+x <- rnorm(30, 3)
+y <- rnorm(30, -3)
+tmp <- c(x,y)
+z <- cbind(tmp, rev(tmp))
+plot(z)
+```
+
+
+## K-means Clustering
+
+The function `kmeans()` in "base R" is used for K-means clustering.
+
+```{r}
+km <- kmeans(z, 2)
+km
+```
+
+>Q. Extracting the component of the results object that details cluster size, cluster centers, and cluster membership vector
+
+```{r}
+km$size
+km$centers
+km$cluster
+```
+
+> Plot of clustering results with points colored by cluster and cluster centeres as new points 
+
+```{r}
+plot(z, col = km$cluster)
+points(km$centers, col = "blue", pch = 15)
+
+```
+
+>Q. Run kmeans instead with an n of 4 and create a results figure 
+
+```{r}
+k4 <- kmeans(z, 4)
+plot(z, col = k4$cluster)
+points(k4$centers, col = "blue", pch = 15)
+```
+
+Analyzing the total sum of squares value
+
+```{r}
+km$tot.withinss
+k4$tot.withinss
+```
+
+creating a scree plot for number of clusters
+
+```{r}
+tsos <- NULL
+for (i in 1:10){
+  kx <- kmeans(z, i)
+  tsos <- c(tsos, kx$tot.withinss)
+}
+tsos
+
+plot(tsos, type = "o")
+```
+From the plot we can identify the scree point for this data set is 2 since 2 has the largest drop off for the total sum of squares. Thus, 2 clusters is optimal for  `kmeans()` for this data set. 
+
+**N.B** Determining the scree point is integral to preventing bias in data analysis since `kmeans()` will always impose n clusters onto the data set which leads to a potential confirmation bias. Using a scree plot helps to ensure the cluster count is actually optimal outside of human judgment. 
+
+#Hierarchical Clustering
+
+The main function for Hierarchical Clustering is called `hclust()`
+`hclust()` does not take the raw data, it requires a distance matrix output by the function `dist()` which is a matrix of all distances between points. 
+
+```{r}
+d <- dist(z)
+hc <- hclust(d)
+plot(hc)
+```
+
+To extract the cluster membership vector from the `hclust()` function result, we have to "cut" the tree at certain heights to yield separate groups/branches.
+
+Essentially:
+```{r}
+plot(hc)
+abline(h = 8, col = "red")
+```
+
+Using the `cutree()` function on the `hclust()` result we can cut the tree at height h which returns a vector for each point and their respective cluster id.
+
+```{r}
+grps <- cutree(hc, h = 8)
+grps
+```
+compared to `kmeans()` output:
+
+```{r}
+table(grps, km$cluster)
+```
+
+## Principal Component Analysis 
+
+PCA looks to reduce the multidimensional of the data but while only losing a small amount of information. It produces principal vectors that describe the data in lower dimensions (ex. like lines of best fit for all dimensions of the data set). From the principal vectors (eigenvectors), the distance to each point can be calculated perpendicular to the new vector to capture the variance of the data in n dimensions. By using eigenvectors for variance, it effectively rotates the axes which variance is defined which can be used to drop axes with low variance, reducing dimensions for analysis. The first principal axis contains the most variation while the subsequent axes contain the least variation. 
+
+Import the dataset for food consuption in the UK
+
+```{r}
+url <- "https://tinyurl.com/UK-foods"
+x <- read.csv(url)
+head(x)
+```
+
+Fixing the row names to make the `rownames()` the column 1 names and not a separate column manually:
+
+```{r}
+rownames(x) <- x[,1]
+x <- x[,-1] # negative indices removed those columns from 
+head(x)
+```
+
+ Better method by adding the `row.names` argument in the `read.csv()` method:
+ 
+```{r}
+x <- read.csv(url, row.names = 1)
+head(x)
+```
+ ## Spotting major differences and trends
+ 
+ With 17 dimensions, identifying differences between each varaible is difficult:
+ 
+```{r}
+barplot(as.matrix(x), beside=T, col=rainbow(nrow(x)))
+```
+ 
+ Pairs plot plots differences betwween each condition in a matrix 
+ 
+```{r}
+pairs(x, col=rainbow(nrow(x)), pch=16)
+```
+ 
+ Heat maps
+ 
+```{r}
+library(pheatmap)
+
+pheatmap( as.matrix(x) )
+```
+ 
+## PCA to the rescue
+
+The main PCA function in "base R" is the function `prcomp()`. for `prcomp()` the data input needs to be in a longer format with variables as rows and vice versa. Using the `t()` function we can rotate the data set to be compatable with `prcomp()`.
+
+```{r}
+pca <- prcomp(t(x))
+summary(pca)
+```
+
+Ordination plots (PC plots, score plots): creates a new plot along the new axes with the principal axes. 
+
+```{r}
+attributes(pca)
+```
+
+To make one of the main PCA result figure the value `x` within the pca object represents the score for each point for the plot.
+
+Plotting PC1 to PC2 (since 96.5% of the variance is within these two vectors):
+
+```{r}
+library(ggplot2)
+
+my_cols <- c("orange", "red","blue", "green")
+
+ggplot(pca$x, aes(PC1, PC2)) +
+  geom_point(color = my_cols)
+```
+
+The second major result figure unpacks the meaning behind each principal axis called a "loadings plot" or "variable contributions plot" or "weight plot". Plotting the relative contribution of each variable to each prinpal axis.
+
+PC1:
+```{r}
+ggplot(pca$rotation) +
+  aes(PC1, reorder(rownames(pca$rotation), PC1)) +
+  geom_col()
+```
+
+PC2
+```{r}
+ggplot(pca$rotation) +
+  aes(PC2, reorder(rownames(pca$rotation), PC2)) +
+  geom_col()
+```
+
+

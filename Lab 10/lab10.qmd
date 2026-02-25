@@ -1,0 +1,207 @@
+---
+title: "lab10"
+author: "Max Wang"
+format: pdf
+toc: True
+---
+
+## PDB Statistics
+
+The [Proteinn Data Bank (PDB)](https://www.rcsb.org/) is the main repository of biomolecular structural data. 
+
+```{r}
+data <- read.csv("pdb_stats.csv", row.names = 1)
+head(data)
+
+```
+
+>Q1: What percentage of structures in the PDB are solved by X-Ray and Electron Microscopy.
+
+```{r}
+c.sums <- colSums(data)
+c.sums/c.sums["Total"] *100
+```
+80.95% of the PDB structures are solved by X-ray and 12.84% are solved by electron microscopy. 
+
+>Q2: What proportion of structures in the PDB are protein?
+
+```{r}
+sum(data$Total[1:3])/c.sums["Total"] *100
+```
+97.91% of all structures in the PDB database are proteins. 
+
+
+>Q3: Type HIV in the PDB website search box on the home page and determine how many HIV-1 protease structures are in the current PDB?
+
+There are 1,173 structures for HIV proteases.
+
+## Using Molstar
+
+Using the [molstar viewer](https://molstar.org/viewer/) we can look to view proteins of interest and highlight components. 
+
+With Mol* visual representations can be made like:
+
+![first view of HIV-Pr](1TQN-1HSG (3).png)
+
+
+![Ribbon representation colored by secondary strucutre](1TQN-1HSG (4).png)
+
+>Q4: Water molecules normally have 3 atoms. Why do we see just one atom per water molecule in this structure?
+
+Only 1 atom is visible because otherwise water would cause too much visual clutter.
+
+>Q5: There is a critical “conserved” water molecule in the binding site. Can you identify this water molecule? What residue number does this water molecule have
+
+The water molecule has interactions with residue number ile50 because it forms hydrogen bonds with the ile50 backbone on both subunits.
+
+>Q6: Generate and save a figure clearly showing the two distinct chains of HIV-protease along with the ligand. You might also consider showing the catalytic residues ASP 25 in each chain and the critical water (we recommend “Ball & Stick” for these side-chains). Add this figure to your Quarto document.
+
+![](1TQN-1HSG (7).png)
+
+>Q7: [Optional] As you have hopefully observed HIV protease is a homodimer (i.e. it is composed of two identical chains). With the aid of the graphic display can you identify secondary structure elements that are likely to only form in the dimer rather than the monomer?
+
+![The beta sheet at the top of the protease can only form when both monomers combine since it uses protions from both of the subunits.](1TQN-1HSG (6).png)
+
+
+## Bio3D in R
+
+
+Accessing pdb data and loading the bio3d package
+```{r}
+library(bio3d)
+hiv <- read.pdb("1hsg")
+```
+>Q7: How many amino acid residues are there in this pdb object? 
+
+198
+
+>Q8: Name one of the two non-protein residues? 
+
+HOH (water)
+
+>Q9: How many protein chains are in this structure? 
+
+2
+
+Looking into the atom records
+
+```{r}
+head(hiv$atom)
+```
+
+Exploring the `bio3dview` package that isnt on CRAN. Using the `remotes` package to install a package from GitHub. 
+
+```{r}
+library(bio3dview)
+library(NGLVieweR)
+
+#view.pdb(hiv) |>
+  #setSpin()
+```
+
+Highlighting certain residues
+
+```{r}
+#sele <- atom.select(hiv, resno=25)
+#view.pdb(hiv, cols=c("navy","teal"), 
+         #highlight = sele,
+         #highlight.style = "spacefill") |>
+  #setRock()
+```
+
+## Normal Mode Analysis
+
+Using normal mode analysis to predict the dynamics of the protein Adenylate Kinase
+
+```{r}
+adk <- read.pdb("6s36")
+```
+
+
+using the normal mode analyiss function on the adk object. 
+```{r}
+m <- nma(adk)
+```
+
+Plotting results
+```{r}
+plot(m)
+```
+Storing the data as a movie to be viewed in Mol*
+```{r}
+mktrj(m, file="adk_m7.pdb")
+```
+
+## Comparative structure analysis of Adenylate Kinase
+
+Returning to HTML outputs. 
+
+accessing the pdb data for adenylate kinase
+
+```{r}
+aa <- get.seq("1ake_A")
+aa
+```
+
+Feeding aa sequence into blast 
+
+```{r}
+blast <- blast.pdb(aa)
+head(blast$hit.tbl)
+```
+
+plotting the output into variable hits 
+
+```{r}
+hits <- plot(blast)
+```
+
+Top ids 
+```{r}
+head(hits$pdb.id)
+```
+
+Downloading the "top hits" which will be ADK strucutres from the pdb database.
+
+```{r}
+files <- get.pdb(hits$pdb.id, path = "pdbs", split = T, gzip = T)
+#path = declares where the data id downloaded, creates a new folder called "pdbs" for the pdb downlads 
+```
+
+Installing **BiocManager** from CRAN to install BioCondunctor. Using the install function in BiocManager to install Biocondunctor: `BiocManager::install("msa")`
+
+Aligning the PDB files to superimpose structures. 
+
+```{r}
+pdbs <- pdbaln(files, fit = TRUE, exefile="msa") # fit = true aligns positions, exefile = calls the dependency from the msa package
+```
+
+Viewing the strucutres with bio3view:
+
+```{r}
+#view.pdbs(pdbs)
+```
+
+```{r}
+#view.pdbs(pdbs, colorScheme ="residue")
+```
+
+Running functions `rmsd()`, `rmsf()`, and `pca()` to display distance between atoms from each structure
+
+```{r}
+pc.xray <- pca(pdbs)
+plot(pc.xray)
+```
+
+Plotting PC1 vs PC2
+
+```{r}
+plot(pc.xray, 1:2)
+```
+
+Creating a movie to highlight the major motion of the dataset. Visualize in molstar
+
+```{r}
+pc1 <- mktrj(pc.xray, pc=1, file="pc_1.pdb")
+```
+
