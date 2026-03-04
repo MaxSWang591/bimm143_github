@@ -1,0 +1,7 @@
+---
+title: "lab16"
+author: "Max Wang"
+format: pdf
+---
+
+Introduction to UNIX
