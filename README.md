@@ -7,7 +7,7 @@ Class work from [BIMM 143](https://bioboot.github.io/bimm143_W26/) at UC San Die
 
 Class 04 [R fundamentals](Lab4/lab04.pdf)
 
-Class 05 [Data visualization with ggplot](Lab5/lab05.pdf)
+Class 05 [Data visualization with ggplot](Lab5/lab05.md)
 
 *R fundamentals*
 
