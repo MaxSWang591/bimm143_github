@@ -1,0 +1,81 @@
+---
+title: "lab17"
+author: "Max Wang"
+toc: True
+format: pdf
+---
+
+## Importing data from sequence analysis 
+
+```{r}
+library(tximport)
+
+# setup the folder and file-names to read
+folders <- dir(pattern="SRR21568*")
+samples <- sub("_quant", "", folders)
+files <- file.path( folders, "abundance.h5" )
+names(files) <- samples
+
+txi.kallisto <- tximport(files, type = "kallisto", txOut = TRUE)
+head(txi.kallisto$counts)
+```
+searching for the total number of entries
+
+```{r}
+colSums(txi.kallisto$counts)
+```
+total entries with nonzero reads across all samples
+
+```{r}
+sum(rowSums(txi.kallisto$counts) > 0)
+```
+filtering out zero count genes and genes with no change 
+
+```{r}
+keep <- rowSums(txi.kallisto$counts) > 0
+kset_trimed <- txi.kallisto$counts[keep, ]
+
+keep2 <- apply(kset_trimed,1,sd) > 0
+x <- kset_trimed[keep2, ]
+head(x)
+```
+
+## PCA Analysis 
+
+Running PCA on the trimmed dataset
+
+```{r}
+pca <- prcomp(t(x), scale = T)
+summary(pca)
+```
+Plot of PC1 and PC2
+
+```{r}
+library(ggplot2)
+library(ggrepel)
+plot <- ggplot(pca$x, aes(x = PC1, y = PC2, label = rownames(pca$x))) +
+  geom_point() +
+  geom_text_repel() +
+  labs(title = "Plot of PC1 and PC2")
+plot
+```
+
+Plot of PC1 and PC3
+
+```{r}
+plot2 <- ggplot(pca$x, aes(x = PC1, y = PC3, label = rownames(pca$x))) +
+  geom_point() +
+  geom_text_repel() +
+  labs(title = "Plot of PC1 and PC3")
+plot2
+```
+
+Plot of PC2 and PC3
+
+```{r}
+plot3 <- ggplot(pca$x, aes(x = PC2, y = PC3, label = rownames(pca$x))) +
+  geom_point() +
+  geom_text_repel() +
+  labs(title = "Plot of PC2 and PC3")
+plot3
+```

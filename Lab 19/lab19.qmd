@@ -1,0 +1,18 @@
+---
+title: "lab19"
+author: "Max Wang"
+format: pdf
+---
+
+## Importing Data
+
+```{r}
+library(bio3d)
+data <- read.fasta("A18629546_mutant_seq.fa")
+```
+
+```{r}
+which(conserv(data) != 1)
+```
+
+lollipop graph from the GDC portal using the ProteinPaint program.
