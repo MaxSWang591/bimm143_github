@@ -1,0 +1,121 @@
+# lab12
+Max Wang
+
+- [Identifying Genetic Varients](#identifying-genetic-varients)
+- [Introduction to RNA Seq Analysis](#introduction-to-rna-seq-analysis)
+- [Mapping RNA seq data to a genome](#mapping-rna-seq-data-to-a-genome)
+
+## Identifying Genetic Varients
+
+> Q1: What are those 4 candidate SNPs?
+
+rs12936231, rs8067378, rs9303277, and rs7216389
+
+> Q2: What three genes do these variants overlap or effect?
+
+ZPBP2, IKZF3, and GSDMB
+
+> Q3: What is the location of rs8067378 and what are the different
+> alleles for rs8067378?
+
+rs8067378 is on chromasome 17:39894595-39895595, and it has the alleles
+A/G
+
+> Q4: Name at least 3 downstream genes for rs8067378?
+
+GSDMB, ORMDL3, and LRRC3C
+
+> Q5: What proportion of the Mexican Ancestry in Los Angeles sample
+> population (MXL) are homozygous for the asthma associated SNP (G\|G)?
+
+``` r
+mxl <- read.csv("373531-SampleGenotypes-Homo_sapiens_Variation_Sample_rs8067378 (1).csv")
+table(mxl$Genotype..forward.strand.)/nrow(mxl)
+```
+
+
+         A|A      A|G      G|A      G|G 
+    0.343750 0.328125 0.187500 0.140625 
+
+14.06% of the sample of people with Mexican Ancentry were homoxygous
+G\|G for the asthma SNP.
+
+Similar example with CHB (han Chinese in bejing)
+
+``` r
+mxl <- read.csv("373515-SampleGenotypes-Homo_sapiens_Variation_Sample_rs8067378.csv")
+table(mxl$Genotype..forward.strand.)/nrow(mxl)
+```
+
+
+          A|A       A|G       G|A       G|G 
+    0.4077670 0.2524272 0.2038835 0.1359223 
+
+> Q6. Back on the ENSEMBLE page, use the “search for a sample” field
+> above to find the particular sample HG00109. This is a male from the
+> GBR population group. What is the genotype for this sample?
+
+This sample has the genotype G\|G
+
+## Introduction to RNA Seq Analysis
+
+Using Galaxy, upload sequencing data and use built in tools to analyze
+the RNA seq data.
+
+> Q7: How many sequences are there in the first file? What is the file
+> size and format of the data?
+
+There are 3,863 sequences in the first file and it is 741.9 KB total in
+fastqsanger format.
+
+**there are two files because sanger produces a forward and a reverse
+read**
+
+**FASTQ format starts with a @ instead of a \> like fasta. comments are
+still in (). The next line is the actual sequence followed by a new line
+an +. After the + is the quality score. quality score determines how
+confident the nt is. Quality is based of numbering translated to ascii,
+A = 64. Its diff for each format but overall all same idea**
+
+    @title (comment)
+    ATGCAT 
+    +
+    AA/EEE (score)
+
+> Q8: What is the GC content and sequence length of the second fastq
+> file?
+
+running the fastQC program to test quality of reads.
+
+The second fastaq file has a gc content of 54% and a length of 50-75 nt
+
+> Q9: How about per base sequence quality? Does any base have a mean
+> quality score below 20?
+
+There were non with a mean quality score below 20
+
+## Mapping RNA seq data to a genome
+
+Effectively using a known genome as a guide to align each fragment and
+map them to different genes in the genome. Based on the number of
+sequence reads we can then determine expression levels.
+
+> Q10: Where are most the accepted hits located?
+
+Most of the accepted hits are within the range
+chr17:38,150,862-38,154,477.
+
+> Q11: Following Q10, is there any interesting gene around that area?
+
+The hits are within the exons on the gene PSMD3.
+
+Using the tool cufflinks and an already anotated sequence of the human
+genome, we can find sequence expression by coudnting the RNA seq hits.
+
+> Q12: Cufflinks again produces multiple output files that you can
+> inspect from your right-handside galaxy history. From the “gene
+> expression” output, what is the FPKM for the ORMDL3 gene? What are the
+> other genes with above zero FPKM values?
+
+The FPKM for ORMDL3 was 137590. The other genes with FPKM values were
+ZPBP2, GSDMB, and PSMD3.
