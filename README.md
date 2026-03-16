@@ -29,5 +29,5 @@ Class 14 [RNA seq mini project](lab14/lab14.md)
 
 Class 17 [Sequence analysis with cloud computing](lab17/lab17.md)
 
-Class 18 [Pertusis mini project](lab18/lab18.md)
+Class 18 [Pertusis mini project](Lab18/lab18.md)
 
